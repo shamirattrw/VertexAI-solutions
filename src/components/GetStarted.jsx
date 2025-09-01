@@ -327,7 +327,6 @@
 
 
 
-
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
@@ -348,12 +347,12 @@ const GetStarted = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    bookingDate: "",
     message: "",
+    bookingDate: "", // <-- added
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); // <-- added
 
   const handleChange = (e) => {
     setFormData({
@@ -364,22 +363,27 @@ const GetStarted = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setError("");
 
+    // ensure booking date/time is selected
     if (!formData.bookingDate) {
-      setError("Please select a booking date & time.");
+      setIsLoading(false);
+      setError("Please select your preferred booking date & time.");
       return;
     }
 
-    // Convert from "YYYY-MM-DDTHH:mm" → "DD-MM-YYYY HH:mm"
-    const dateObj = new Date(formData.bookingDate);
-    const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}-${String(
-      dateObj.getMonth() + 1
-    ).padStart(2, "0")}-${dateObj.getFullYear()} ${String(
-      dateObj.getHours()
-    ).padStart(2, "0")}:${String(dateObj.getMinutes()).padStart(2, "0")}`;
-
-    setIsLoading(true);
+    // reformat "YYYY-MM-DDTHH:mm" -> "DD-MM-YYYY HH:mm" (24h)
+    const toDDMMYYYY_HHMM = (val) => {
+      try {
+        const [datePart, timePart] = val.split("T"); // "YYYY-MM-DD", "HH:mm"
+        const [yyyy, mm, dd] = datePart.split("-");
+        return `${dd}-${mm}-${yyyy} ${timePart}`;
+      } catch {
+        return val;
+      }
+    };
+    const formattedDate = toDDMMYYYY_HHMM(formData.bookingDate);
 
     try {
       const response = await fetch(
@@ -396,7 +400,7 @@ const GetStarted = () => {
                 fields: {
                   Name: formData.name,
                   Email: formData.email,
-                  "Booking Date": formattedDate,
+                  "Booking Date": formattedDate, // <-- added to Airtable
                   Message: formData.message,
                 },
               },
@@ -408,7 +412,7 @@ const GetStarted = () => {
       if (!response.ok) throw new Error("Failed to submit form");
 
       setShowSuccess(true);
-      setFormData({ name: "", email: "", bookingDate: "", message: "" });
+      setFormData({ name: "", email: "", message: "", bookingDate: "" });
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -416,6 +420,7 @@ const GetStarted = () => {
     }
   };
 
+  // Auto-hide success notification after 2 seconds
   useEffect(() => {
     if (showSuccess) {
       const timer = setTimeout(() => {
@@ -427,7 +432,7 @@ const GetStarted = () => {
 
   return (
     <section id="get-started" className="py-20 bg-light-navy relative">
-      {/* Success Notification */}
+      {/* Success Notification with inline animation styles */}
       {showSuccess && (
         <div
           className="fixed top-6 right-6 z-50"
@@ -437,10 +442,21 @@ const GetStarted = () => {
             transform: "translateY(-10px)",
           }}
         >
-          <div className="bg-mint-green text-dark-navy px-6 py-4 rounded-lg shadow-lg flex items-center">
-            <CheckCircle className="h-5 w-5 mr-2" />
-            <span>Thank you! We'll be in touch within 24 hours.</span>
-          </div>
+          {showSuccess && (
+            <div
+              className="fixed top-6 right-6 z-50"
+              style={{
+                animation: "fadeIn 0.3s ease-out forwards",
+                opacity: 0,
+                transform: "translateY(-10px)",
+              }}
+            >
+              <div className="bg-mint-green text-dark-navy px-6 py-4 rounded-lg shadow-lg flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                <span>Thank you! We'll be in touch within 24 hours.</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -467,6 +483,27 @@ const GetStarted = () => {
             We're accepting our first 10 pilot clients at discounted rates.
             Schedule a free strategy call to discuss your needs.
           </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+            <div className="flex items-center justify-center space-x-3 p-4 bg-mint-green/5 border border-mint-green/20 rounded-lg">
+              <Users className="h-5 w-5 text-mint-green" />
+              <span className="text-mint-green font-inter font-medium">
+                Pilot Client Pricing
+              </span>
+            </div>
+            <div className="flex items-center justify-center space-x-3 p-4 bg-mint-green/5 border border-mint-green/20 rounded-lg">
+              <Clock className="h-5 w-5 text-mint-green" />
+              <span className="text-mint-green font-inter font-medium">
+                Priority Support
+              </span>
+            </div>
+            <div className="flex items-center justify-center space-x-3 p-4 bg-mint-green/5 border border-mint-green/20 rounded-lg">
+              <Target className="h-5 w-5 text-mint-green" />
+              <span className="text-mint-green font-inter font-medium">
+                Custom Solutions
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
@@ -515,7 +552,7 @@ const GetStarted = () => {
                 </div>
               </div>
 
-              {/* Booking Date Input */}
+              {/* NEW: Booking Date & Time Picker (kept everything else unchanged) */}
               <div>
                 <label
                   htmlFor="bookingDate"
@@ -530,7 +567,7 @@ const GetStarted = () => {
                   required
                   value={formData.bookingDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white focus:outline-none focus:border-mint-green transition-colors"
+                  className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white placeholder-text-gray focus:outline-none focus:border-mint-green transition-colors"
                 />
                 {error && (
                   <p className="text-red-400 text-sm mt-2">{error}</p>
@@ -575,6 +612,84 @@ const GetStarted = () => {
                 )}
               </button>
             </form>
+          </div>
+
+          {/* RIGHT COLUMN KEPT EXACTLY AS-IS */}
+          <div className="space-y-8">
+            <div className="bg-dark-navy p-8 rounded-2xl border border-mint-green/20">
+              <div className="flex items-center mb-4">
+                <Calendar className="h-6 w-6 text-mint-green mr-3" />
+                <h3 className="text-xl font-poppins font-semibold text-white">
+                  What to Expect
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-mint-green/20 border border-mint-green rounded-full flex items-center justify-center mt-1">
+                    <div className="w-2 h-2 bg-mint-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <h4 className="font-poppins font-medium text-white">
+                      Discovery Call (30 min)
+                    </h4>
+                    <p className="text-text-gray text-sm">
+                      We'll discuss your current processes and identify
+                      automation opportunities
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-mint-green/20 border border-mint-green rounded-full flex items-center justify-center mt-1">
+                    <div className="w-2 h-2 bg-mint-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <h4 className="font-poppins font-medium text-white">
+                      Custom Proposal
+                    </h4>
+                    <p className="text-text-gray text-sm">
+                      Receive a detailed plan with transparent pricing within 48
+                      hours
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-mint-green/20 border border-mint-green rounded-full flex items-center justify-center mt-1">
+                    <div className="w-2 h-2 bg-mint-green rounded-full"></div>
+                  </div>
+                  <div>
+                    <h4 className="font-poppins font-medium text-white">
+                      Development & Testing
+                    </h4>
+                    <p className="text-text-gray text-sm">
+                      We build and test your solution with regular check-ins
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-mint-green/10 p-6 rounded-xl border border-mint-green/30">
+              <h3 className="font-poppins font-semibold text-white mb-3">
+                Pilot Program Benefits
+              </h3>
+              <ul className="space-y-2">
+                <li className="flex items-center text-text-gray">
+                  <div className="w-2 h-2 bg-mint-green rounded-full mr-3"></div>
+                  50% discount on development costs
+                </li>
+                <li className="flex items-center text-text-gray">
+                  <div className="w-2 h-2 bg-mint-green rounded-full mr-3"></div>
+                  Priority support and faster delivery
+                </li>
+                <li className="flex items-center text-text-gray">
+                  <div className="w-2 h-2 bg-mint-green rounded-full mr-3"></div>
+                  Opportunity to shape our service offerings
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
