@@ -585,6 +585,7 @@ const GetStarted = () => {
                   id="message"
                   name="message"
                   rows="4"
+                  required
                   value={formData.message}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white placeholder-text-gray focus:outline-none focus:border-mint-green transition-colors resize-none"
