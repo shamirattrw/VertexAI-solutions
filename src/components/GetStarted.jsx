@@ -324,9 +324,6 @@
 
 // export default GetStarted;
 
-
-
-
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
@@ -413,6 +410,13 @@ const GetStarted = () => {
 
       setShowSuccess(true);
       setFormData({ name: "", email: "", message: "", bookingDate: "" });
+
+      // ✅ Fire Google Ads Conversion Event
+      if (typeof window.gtag !== "undefined") {
+        window.gtag("event", "conversion", {
+          send_to: "AW-16896333675/et8dCJ3Zy5IbEOuu5vg-",
+        });
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -569,9 +573,7 @@ const GetStarted = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white placeholder-text-gray focus:outline-none focus:border-mint-green transition-colors"
                 />
-                {error && (
-                  <p className="text-red-400 text-sm mt-2">{error}</p>
-                )}
+                {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
               </div>
 
               <div>
