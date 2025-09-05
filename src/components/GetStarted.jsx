@@ -18,6 +18,7 @@ const GetStarted = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "", // <-- added
     message: "",
     bookingDate: "", // <-- added
   });
@@ -41,6 +42,13 @@ const GetStarted = () => {
     if (!formData.bookingDate) {
       setIsLoading(false);
       setError("Please select your preferred booking date & time.");
+      return;
+    }
+
+    // ensure phone is 10 digits
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setIsLoading(false);
+      setError("Please enter a valid 10-digit phone number.");
       return;
     }
 
@@ -71,6 +79,7 @@ const GetStarted = () => {
                 fields: {
                   Name: formData.name,
                   Email: formData.email,
+                  "Phone Number": formData.phone, // <-- added to Airtable
                   "Booking Date": formattedDate, // <-- added to Airtable
                   Message: formData.message,
                 },
@@ -83,7 +92,7 @@ const GetStarted = () => {
       if (!response.ok) throw new Error("Failed to submit form");
 
       setShowSuccess(true);
-      setFormData({ name: "", email: "", message: "", bookingDate: "" });
+      setFormData({ name: "", email: "", phone: "", message: "", bookingDate: "" });
 
       // ✅ Fire Google Ads Conversion Event
       if (typeof window.gtag !== "undefined") {
@@ -238,7 +247,29 @@ const GetStarted = () => {
                 </div>
               </div>
 
-              {/* NEW: Booking Date & Time Picker (kept everything else unchanged) */}
+              {/* NEW: Phone Number Input */}
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-text-gray mb-2"
+                >
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  required
+                   pattern="[0-9]{10}" 
+                  value={formData.phone}
+                  onChange={handleChange}
+                  maxLength={10}
+                  className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white placeholder-text-gray focus:outline-none focus:border-mint-green transition-colors"
+                  placeholder="1234567890"
+                />
+              </div>
+
+              {/* NEW: Booking Date & Time Picker */}
               <div>
                 <label
                   htmlFor="bookingDate"
