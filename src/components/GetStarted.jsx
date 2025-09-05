@@ -265,7 +265,7 @@ const GetStarted = () => {
                   onChange={handleChange}
                   maxLength={10}
                   className="w-full px-4 py-3 bg-light-navy border border-mint-green/30 rounded-lg text-white placeholder-text-gray focus:outline-none focus:border-mint-green transition-colors"
-                  placeholder="1234567890"
+                  placeholder="Enter valid phone number"
                 />
               </div>
 
